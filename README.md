@@ -16,20 +16,20 @@ El sistema utiliza **Arquitectura Hexagonal Estricta (Puertos y Adaptadores)** p
 
 ```mermaid
 graph TD
-    subgraph Adaptadores de Entrada (Inbound / Primary)
+    subgraph InboundAdapters ["Adaptadores de Entrada (Inbound / Primary)"]
         TCP["jPOS TCP Server (Puerto 6000)"]
         REST["REST Controllers (Spring Web)"]
     end
 
-    subgraph Capa de Aplicación (Application Layer)
-        subgraph Puertos de Entrada (Inbound Ports)
+    subgraph AppLayer ["Capa de Aplicación (Application Layer)"]
+        subgraph InboundPorts ["Puertos de Entrada (Inbound Ports)"]
             TxPortIn["ProcessTransactionUseCase"]
             AttestPortIn["DeviceAttestationUseCase"]
         end
 
         AppService["TransactionApplicationService"]
 
-        subgraph Puertos de Salida (Outbound Ports)
+        subgraph OutboundPorts ["Puertos de Salida (Outbound Ports)"]
             TxRepoPort["TransactionRepositoryPort"]
             KafkaPort["EventPublisherPort"]
             AttestPort["MPocAttestationPort"]
@@ -37,13 +37,13 @@ graph TD
         end
     end
 
-    subgraph Núcleo del Dominio (Pure Domain Core)
+    subgraph DomainCore ["Núcleo del Dominio (Pure Domain Core)"]
         TxEntity["Transaction (Entity)"]
         AttestEntity["MPocAttestation (Entity)"]
         PANVO["PAN (Value Object Record)"]
     end
 
-    subgraph Adaptadores de Salida (Outbound / Secondary)
+    subgraph OutboundAdapters ["Adaptadores de Salida (Outbound / Secondary)"]
         JPA["PostgreSQL JPA Repository"]
         Kafka["Kafka Event Producer"]
         MPoc["MPoc Cloud Client (Simulated)"]

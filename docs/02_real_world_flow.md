@@ -130,18 +130,18 @@ Una vez que la transacción es aprobada, se ejecuta el procesamiento asíncrono 
 
 ```mermaid
 graph LR
-    subgraph SoftPOS Core Backend
+    subgraph CoreBackend ["SoftPOS Core Backend"]
         Core[TransactionApplicationService]
         DB[(PostgreSQL)]
         Kafka[Kafka Event Producer]
     end
 
-    subgraph Arquitectura de Eventos (Asíncrona)
+    subgraph AsyncEvents ["Arquitectura de Eventos (Asíncrona)"]
         TopicCreated[Tópico: transactions-created]
         TopicProcessed[Tópico: transactions-processed]
     end
 
-    subgraph Microservicios y Consumidores
+    subgraph Microservices ["Microservicios y Consumidores"]
         ReportService[Servicio de Reportes / BI]
         FraudService[Motor de Prevención de Fraudes / ML]
         Accounting[Sistema Contable y Liquidación]
