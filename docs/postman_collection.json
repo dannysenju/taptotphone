@@ -1,0 +1,212 @@
+{
+  "info": {
+    "_postman_id": "8b584d0b-689b-449e-ba23-1d01f9bbd5f1",
+    "name": "SoftPOS Tap-to-Phone API",
+    "description": "Colección completa para realizar pruebas de extremo a extremo del microservicio Core de Tap-to-Phone. Incluye atestación remota MPoC y transacciones con validación Luhn y cifrado FPE.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "item": [
+    {
+      "name": "1. MPoC Device Attestation",
+      "item": [
+        {
+          "name": "Verify Device (Trusted)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"terminalId\": \"TRM00001\",\n  \"deviceHardwareId\": \"ARM64-SECURE-CHIP-99A82D\",\n  \"hceToken\": \"SECURE_HCE_TOKEN_EXP_2026\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/v1/attestation/verify",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "attestation",
+                "verify"
+              ]
+            },
+            "description": "Envía los identificadores de hardware y tokens NFC del terminal móvil para realizar la atestación MPoC remota y validar el nivel de confianza (TRUSTED)."
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "2. Core Transactions",
+      "item": [
+        {
+          "name": "Process Transaction (Approved - Valid Luhn)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"pan\": \"4111112222213333\",\n  \"amount\": 150.00,\n  \"currency\": \"840\",\n  \"merchantId\": \"MERCH0000000001\",\n  \"terminalId\": \"TRM00001\",\n  \"stan\": \"000101\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/v1/transactions/process",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "transactions",
+                "process"
+              ]
+            },
+            "description": "Procesa un pago exitoso con tarjeta utilizando una PAN real con verificación matemática de Luhn válida. Aplica FPE sobre los dígitos centrales y persiste en base de datos."
+          },
+          "response": []
+        },
+        {
+          "name": "Process Transaction (Declined - Invalid Luhn)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"pan\": \"4111112222223333\",\n  \"amount\": 250.00,\n  \"currency\": \"840\",\n  \"merchantId\": \"MERCH0000000001\",\n  \"terminalId\": \"TRM00001\",\n  \"stan\": \"000102\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/v1/transactions/process",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "transactions",
+                "process"
+              ]
+            },
+            "description": "Prueba de error al ingresar una tarjeta que NO pasa la validación Luhn. Retorna código de respuesta '14' (Tarjeta Inválida) inmediatamente sin procesar."
+          },
+          "response": []
+        },
+        {
+          "name": "Process Transaction (Declined - Exceeds Tap Limit)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"pan\": \"4111112222213333\",\n  \"amount\": 15000.00,\n  \"currency\": \"840\",\n  \"merchantId\": \"MERCH0000000001\",\n  \"terminalId\": \"TRM00001\",\n  \"stan\": \"000103\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/v1/transactions/process",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "transactions",
+                "process"
+              ]
+            },
+            "description": "Prueba de rechazo de negocio. El monto excede el límite permitido para pagos Tap sin contacto de una sola exhibición ($10,000). Retorna código de respuesta '61' (Supera límite)."
+          },
+          "response": []
+        },
+        {
+          "name": "List Transactions (Masked PANs)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/v1/transactions",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "transactions"
+              ]
+            },
+            "description": "Consulta el historial seguro de transacciones. Retorna el listado completo demostrando que los PANs reales nunca se exponen (retorna en formato enmascarado '411111******3333')."
+          },
+          "response": []
+        },
+        {
+          "name": "Get Transaction By ID",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/v1/transactions/e15c4d32-cd2b-426b-88a2-f81d11ff9288",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "transactions",
+                "e15c4d32-cd2b-426b-88a2-f81d11ff9288"
+              ]
+            },
+            "description": "Consulta un registro transaccional específico utilizando su ID (UUID) único."
+          },
+          "response": []
+        }
+      ]
+    }
+  ],
+  "event": [
+    {
+      "listen": "prerequest",
+      "script": {
+        "type": "text/javascript",
+        "exec": [
+          ""
+        ]
+      }
+    },
+    {
+      "listen": "test",
+      "script": {
+        "type": "text/javascript",
+        "exec": [
+          ""
+        ]
+      }
+    }
+  ],
+  "variable": [
+    {
+      "key": "base_url",
+      "value": "http://localhost:8080",
+      "type": "string"
+    }
+  ]
+}

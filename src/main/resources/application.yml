@@ -1,0 +1,77 @@
+spring:
+  application:
+    name: taptotphone
+
+  # Enable Virtual Threads (Project Loom) for lightweight high-concurrency connections
+  threads:
+    virtual:
+      enabled: true
+
+  # Database configuration
+  datasource:
+    url: jdbc:postgresql://localhost:5432/taptotphone
+    username: postgres
+    password: postgrespassword
+    driver-class-name: org.postgresql.Driver
+    hikari:
+      maximum-pool-size: 50
+      minimum-idle: 10
+      idle-timeout: 30000
+      connection-timeout: 20000
+      max-lifetime: 1800000
+
+  # JPA & Hibernate configuration
+  jpa:
+    database-platform: org.hibernate.dialect.PostgreSQLDialect
+    hibernate:
+      ddl-auto: none # Managed by db/schema.sql and db/data.sql
+    show-sql: false
+    properties:
+      hibernate:
+        format_sql: false
+        jdbc:
+          batch_size: 25
+        order_inserts: true
+        order_updates: true
+
+  # SQL Initialization to run schema.sql automatically
+  sql:
+    init:
+      mode: always
+      schema-locations: classpath:db/schema.sql
+
+  # Kafka configuration
+  kafka:
+    bootstrap-servers: localhost:9092
+    producer:
+      key-serializer: org.apache.kafka.common.serialization.StringSerializer
+      value-serializer: org.springframework.kafka.support.serializer.JsonSerializer
+      acks: all
+      retries: 3
+    consumer:
+      group-id: tap-to-phone-core-group
+      key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
+      value-deserializer: org.springframework.kafka.support.serializer.JsonDeserializer
+      properties:
+        spring.json.trusted.packages: danny.com.taptotphone.domain.model
+
+# jPOS and Security configuration
+taptotphone:
+  jpos:
+    port: 6000
+    timeout: 30000
+  security:
+    # 256-bit Hexadecimal AES key for Feistel round function
+    fpe-key: 0123456789ABCDEF0123456789ABCDEF
+  mpoc:
+    cloud-validation-url: https://mpoc-cloud-validator.secure-payments.net/v1/attest
+
+# Logging configuration (excluding jpos console verbosity, routing to SLF4J)
+logging:
+  level:
+    root: INFO
+    danny.com.taptotphone: DEBUG
+    org.hibernate.SQL: ERROR
+    org.jpos: WARN
+  pattern:
+    console: "%d{yyyy-MM-dd HH:mm:ss.SSS} [%thread] %-5level %logger{36} - %msg%n"
