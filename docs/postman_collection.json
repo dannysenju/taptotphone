@@ -39,6 +39,37 @@
             "description": "Envía los identificadores de hardware y tokens NFC del terminal móvil para realizar la atestación MPoC remota y validar el nivel de confianza (TRUSTED)."
           },
           "response": []
+        },
+        {
+          "name": "Verify Device (Untrusted - Compromised Hardware)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"terminalId\": \"TRM00002\",\n  \"deviceHardwareId\": \"ARM64-ROOT-COMPROMISED\",\n  \"hceToken\": \"SECURE_HCE_TOKEN_EXP_2026\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/v1/attestation/verify",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "attestation",
+                "verify"
+              ]
+            },
+            "description": "Envía los identificadores de un dispositivo móvil comprometido (con ROOT o desbloqueado). El backend detectará la vulnerabilidad y registrará el dispositivo como UNTRUSTED."
+          },
+          "response": []
         }
       ]
     },
@@ -135,6 +166,37 @@
               ]
             },
             "description": "Prueba de rechazo de negocio. El monto excede el límite permitido para pagos Tap sin contacto de una sola exhibición ($10,000). Retorna código de respuesta '61' (Supera límite)."
+          },
+          "response": []
+        },
+        {
+          "name": "Process Transaction (Failed - Untrusted Device)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"pan\": \"4111112222213333\",\n  \"amount\": 150.00,\n  \"currency\": \"840\",\n  \"merchantId\": \"MERCH0000000001\",\n  \"terminalId\": \"TRM00002\",\n  \"stan\": \"000104\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/v1/transactions/process",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "transactions",
+                "process"
+              ]
+            },
+            "description": "Prueba de rechazo por seguridad. Utiliza la terminal TRM00002 que fue marcada previamente como UNTRUSTED. El backend deniega la transacción y retorna código de respuesta '98' (Falla de Atestación MPoC)."
           },
           "response": []
         },

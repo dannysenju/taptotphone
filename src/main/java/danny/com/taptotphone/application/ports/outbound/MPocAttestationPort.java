@@ -10,4 +10,6 @@ public interface MPocAttestationPort {
     boolean validateDevice(String terminalId, String deviceHardwareId, String hceToken);
     
     void saveAttestation(MPocAttestation attestation);
+
+    java.util.Optional<MPocAttestation> findLatestByTerminalId(String terminalId);
 }

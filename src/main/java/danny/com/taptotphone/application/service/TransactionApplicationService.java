@@ -51,7 +51,9 @@ public class TransactionApplicationService implements ProcessTransactionUseCase,
 
         try {
             // 2. Perform remote device checks (PCI MPoC) - SoftPOS terminal must be validated in the cloud
-            boolean isDeviceValid = true; // We can check device attestation cache if needed
+            boolean isDeviceValid = mpocAttestationPort.findLatestByTerminalId(transaction.getTerminalId())
+                    .map(MPocAttestation::isTrusted)
+                    .orElse(false); // If no attestation is registered, it's not trusted
             if (!isDeviceValid) {
                 log.warn("Device attestation failed for terminal ID: {}", transaction.getTerminalId());
                 transaction.fail("98"); // MPoC security failure

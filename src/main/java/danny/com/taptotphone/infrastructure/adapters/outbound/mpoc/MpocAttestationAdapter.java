@@ -49,4 +49,10 @@ public class MpocAttestationAdapter implements MPocAttestationPort {
         MPocAttestationJpaEntity entity = MPocAttestationJpaEntity.fromDomain(attestation);
         repository.save(entity);
     }
+
+    @Override
+    public java.util.Optional<MPocAttestation> findLatestByTerminalId(String terminalId) {
+        return repository.findFirstByTerminalIdOrderByAttestationDateTimeDesc(terminalId)
+                .map(MPocAttestationJpaEntity::toDomain);
+    }
 }
