@@ -36,7 +36,8 @@ sequenceDiagram
     SDK->>Google: Solicita Token de Integridad de Hardware (Attestation Token)
     Google-->>SDK: Retorna Token firmado por Google (Estado de Bootloader, API, Root)
     
-    SDK->>Backend: POST /api/v1/attestation/verify (TerminalID, HardwareID, HCE Token, Google Token)
+    SDK->>Backend: POST /api/v1/attestation/verify (TerminalID, HardwareID, HCE Token)
+    Note over Backend: Google Token es validado por el SDK móvil antes de enviar — el backend recibe solo los 3 campos del AttestationRequestDto
     Note over Backend: El Adapter recibe el Request HTTP y delega a la capa de Aplicación
     Backend->>Validator: Envía credenciales de seguridad (MPocAttestationPort)
     Validator-->>Backend: Confirma Atestación Exitosa y Firma Reporte Criptográfico
@@ -66,11 +67,13 @@ flowchart TD
     
     G --> H[Paso 3: Intercambio de Datos y Restricciones]
     H --> I[Paso 4: Autenticación de Tarjeta Fuera de Línea - DDA/CDA]
-    Note over I: Valida que la tarjeta no sea clonada usando criptografía de clave pública
+    I -.- NoteI[Nota: Valida que la tarjeta no sea clonada usando criptografía de clave pública]
+    style NoteI fill:#fff3cd,stroke:#ffeeba,stroke-width:1px,color:#000
     
     I --> J[Paso 5: Procesamiento de Acción de Terminal]
     J --> K[Paso 6: Tarjeta Genera Criptograma Financiero ARQC - Application Request Cryptogram]
-    Note over K: El chip de la tarjeta genera el Tag 9F26 (ARQC) usando su clave secreta única
+    K -.- NoteK["Nota: El chip de la tarjeta genera el Tag 9F26 (ARQC) usando su clave secreta única"]
+    style NoteK fill:#fff3cd,stroke:#ffeeba,stroke-width:1px,color:#000
     
     K --> L[SDK Móvil obtiene: PAN, Expiry, Monto, ARQC y ATC - Application Transaction Counter]
     L --> M[SDK Móvil estructura trama ISO-8583 o Payload HTTPS Cifrado]
@@ -88,7 +91,7 @@ sequenceDiagram
     participant App as Celular SoftPOS (Comercio)
     participant Core as Backend SoftPOS Core (Este Sistema)
     participant HSM as HSM (Hardware Security Module)
-    participant Acquirer as Adquirente / Gateway (Stripe/Adyen)
+    participant Acquirer as Adquirente / Switch ISO-8583 (ej. Adquirente Bancario Regional)
     participant Scheme as Franquicia (VisaNet / Mastercard)
     participant Issuer as Banco Emisor (Emite la Tarjeta)
 
@@ -98,7 +101,7 @@ sequenceDiagram
     Core->>Core: 1. Valida formato y Luhn de tarjeta en la capa de Dominio
     Core->>Core: 2. Aplica Format-Preserving Encryption (FPE) sobre dígitos centrales
     Core->>Core: 3. Guarda estado PENDING de la transacción en PostgreSQL
-    Core->>Core: 4. Publica evento Asíncrono en Kafka (transactions-created)
+    Core->>Core: 4. Publica evento Asíncrono en Kafka (tap-to-phone-transactions-created)
 
     Note over Core, HSM: Integración HSM (PCI DSS Obligatorio)
     Core->>HSM: Envía ARQC (Tag 9F26), PAN cifrado y PIN Block (si ingresó PIN en pantalla)
@@ -115,7 +118,7 @@ sequenceDiagram
     Acquirer-->>Core: Responde al backend SoftPOS Core
     
     Core->>Core: 5. Actualiza estado a APPROVED y guarda código de autorización en DB
-    Core->>Core: 6. Publica evento en Kafka (transactions-processed)
+    Core->>Core: 6. Publica evento en Kafka (tap-to-phone-transactions-processed)
     
     Core-->>App: Retorna respuesta TCP ISO-8583 (0210) con Campo 39: 00 (Aprobado)
     
@@ -137,8 +140,8 @@ graph LR
     end
 
     subgraph AsyncEvents ["Arquitectura de Eventos (Asíncrona)"]
-        TopicCreated[Tópico: transactions-created]
-        TopicProcessed[Tópico: transactions-processed]
+        TopicCreated[Tópico: tap-to-phone-transactions-created]
+        TopicProcessed[Tópico: tap-to-phone-transactions-processed]
     end
 
     subgraph Microservices ["Microservicios y Consumidores"]
